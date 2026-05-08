@@ -9,6 +9,10 @@ inputs:
   build_id:
     description: "ID of the workflow from which build URL will be downloaded"
     required: true
+  build_url:
+    description: "URL to be used for artifact downloads. Can be left empty in case
+                  build workflow produces files in format 'build-url_<machine>_<kernel>'"
+    required: false
   gh_token:
     description: "Github token. It's required to download artifacts from the workflow"
     required: true
@@ -63,6 +67,7 @@ runs:
           INPUTS_KERNEL: ${{ inputs.kernel }}
           INPUTS_TESTPLAN: ${{ inputs.testplan }}
           INPUTS_PREFIX: ${{ inputs.prefix }}
+          INPUTS_BUILD_URL: ${{ inputs.build_url }}
         run: |
           set -euo pipefail
           cd lava-test-plans && pip install .
@@ -116,6 +121,9 @@ runs:
             echo "${BUILD_URL_FILE}"
             if [ -f "$BUILD_URL_FILE" ]; then
                 export BUILD_URL=$(cat "${BUILD_URL_FILE}")
+            fi
+            if [ -z "${BUILD_URL}" && -n "${INPUTS_BUILD_URL}" ]; then
+                BUILD_URL="${INPUTS_BUILD_URL}"
             fi
             if [ -z "${BUILD_URL}" ]; then
                echo "BUILD_URL missing"
